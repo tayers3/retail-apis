@@ -1,0 +1,123 @@
+# This document describes the Retail Software Inventory API
+swagger: '2.0'
+info:
+  title: Inventory API
+  description: Retrieve inventory information for a set of locations and items.
+  version: "1.0.0"
+# the domain of the service
+host: tpserv.wincor-nixdorf.com
+# array of all schemes that your API supports
+schemes:
+  - https
+  - http
+# will be prefixed to all paths
+basePath: /tpdotnet/ecosystem
+produces:
+  - application/json
+paths:
+  /inventory-getstock:
+    post:
+      summary: Retrieves inventory information for a set of locations and items.
+      description: The inventory endpoint takes a collection of locations (stores, warehouses, etc..) and a set of items, and returns the current inventory levels for each location-item combination.
+      consumes:
+        - application/json      
+      parameters:
+        - name: format
+          in: query
+          description: The format of the response message (json or xml, json is recommended).
+          required: true
+          type: string
+        - in: body
+          name: InventoryPositionRequestData
+          description: The inventory request object containing the item and location information
+          required: true
+          schema:
+            $ref: "#/definitions/InventoryPositionRequestData"          
+      tags:
+        - Inventory
+        - Stock
+      responses:
+        200:
+          description: An array of stock information objects
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/StockInformationResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  InventoryPositionRequestData:
+    type: object
+    properties:
+      Item:
+        description: Array of item objects to retrieve the inventory information for.
+        type: array
+        items:
+          $ref: '#/definitions/ItemData'
+      BusinessUnit:
+        type: array
+        items:
+          $ref: '#/definitions/BusinessUnitData'
+  ItemData:
+    type: object
+    description: Contains the ItemID information to find the item data.
+    properties:
+      ItemID:
+        $ref: '#/definitions/ItemIDData'
+  ItemIDData:
+    type: object
+    properties:
+      Name:
+        type: string
+        description: The name or ID of the item (depending on the Type)
+      Type:
+        type: string
+        description: The type of the 
+  BusinessUnitData:
+    type: object
+    description: Contains the information to find the business unit location (store, warehouse, etc..)
+    properties:
+      Name:
+        type: string
+      Type:
+        type: string
+  StockInformationResponse:
+    type: object
+    description: Contains an array of all item-location combinations and the stock information of the item at the location
+    properties:
+      StockInformation:
+        type: array
+        items:
+          type: object
+          properties:
+            ItemID:
+              $ref: '#/definitions/ItemIDData'
+            InventoryLocation:
+              type: object
+              properties:
+                BusinessUnit:
+                  $ref: '#/definitions/BusinessUnitData'
+            Quantity:
+              type: object
+              properties:
+                Units:
+                  type: string
+                UnitOfMeasureCode:
+                  type: string         
+      Result:
+        type: string
+        example: SUCCESS or ERROR
+      ExtendedProperties:
+        type: object
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
